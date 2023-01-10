@@ -11,6 +11,7 @@ namespace TestTask
         {
             IEnumerable<Uri> uri;
             IEnumerable<Uri> siteMapUri;
+            IEnumerable<Uri> generalListUri = Enumerable.Empty<Uri>();
             IEnumerable<Uri> unitedListUri;
             IEnumerable<Uri> inSiteMapNotInGeneralListUri;
             IEnumerable<Uri> inGeneralListNotInSiteMap;
@@ -26,12 +27,9 @@ namespace TestTask
                 uri = SiteScan.GetUrlsFromHtml(userUrl);
             } while (uri.Count() == 0);
 
-            var generalListUri = SiteScan.CheckAllPages(uri.ToList(), userUrl);
-
+            generalListUri = SiteScan.CheckAllPages(uri.ToList(), userUrl);
             siteMapUri = SiteMap.ReadSiteMap(userUrl);
-
             unitedListUri = generalListUri.Concat(siteMapUri).Distinct();
-
             inSiteMapNotInGeneralListUri = siteMapUri.Except(generalListUri);
             Console.WriteLine();
             Console.WriteLine("Urls FOUNDED IN SITEMAP.XML but not founded after crawling a web site");

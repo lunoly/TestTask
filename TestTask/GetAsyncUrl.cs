@@ -28,7 +28,6 @@ namespace TestTask
             await _client.GetStringAsync(url);
             sw.Stop();
 
-            //Console.Write(indexNumber + "\t" + url.ToString() + "\t"+ sw.ElapsedMilliseconds + "mc\n");
             return sw.ElapsedMilliseconds;
         }
     }

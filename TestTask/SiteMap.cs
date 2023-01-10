@@ -13,6 +13,12 @@ namespace TestTask
     public static class SiteMap
     {
 
+        /// <summary>
+        /// Gets the urls from sitemap.xml.
+        /// </summary>
+        /// <param name="url">The URL of site from user with console.</param>
+        /// <returns>Retirn url list from sitemap.</returns>
+        ///
         public static IEnumerable<Uri> ReadSiteMap(string url)
         {
             var returnListUri = Enumerable.Empty<Uri>();

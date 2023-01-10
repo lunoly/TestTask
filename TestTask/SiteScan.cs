@@ -17,7 +17,7 @@ namespace TestTask
         /// Gets the urls from website.
         /// </summary>
         /// <param name="url">The URL of site from user with console.</param>
-        /// <returns></returns>
+        /// <returns>List </returns>
         /// 
         public static IEnumerable<Uri> GetUrlsFromHtml(string url)
         {
@@ -36,36 +36,57 @@ namespace TestTask
         /// Gets the urls from HTML.
         /// </summary>
         /// <param name="url">The URL of site from user with console.</param>
-        /// <returns></returns>
+        /// <returns>Urls list.</returns>
         public static IEnumerable<Uri> GetUrlsFromHtml(Uri url)
         {
             var client = new HttpClient();
-            var tresponse = client.GetAsync(url);      //request to url
+            var tresponse = client.GetAsync(url);
             tresponse.Wait();
             var tcontent = tresponse.Result.Content.ReadAsStringAsync();
             tcontent.Wait();
 
-            HtmlDocument doc = new HtmlDocument();      //create html doc by url
+            HtmlDocument doc = new HtmlDocument();
             doc.LoadHtml(tcontent.Result);
 
             var xpath = new StringBuilder("//a[@href")
                 .Append(" and not(@href='')")
                 .Append(" and not(contains(@href,'#'))")
+                .Append(" and not(contains(@href,'}'))")
+                .Append(" and not(contains(@href,'java'))")
                 .Append("]").ToString();
 
             try
             {
-                var urls = doc.DocumentNode.SelectNodes(xpath)      //get all urls
+                var urls = doc.DocumentNode.SelectNodes(xpath)
                           .Select(p => p.Attributes["href"].Value)
-                          .Distinct()
-                          .Select(p =>
-                          {
-                              return (p[0] == '/' || p[0] == '?' || p[0] == '\\') ?
-                                         new Uri(url, p) :   //if relative url
-                                         new Uri(p);     //if absolute url
-                          });
+                          .Distinct();
 
-                return urls;
+                IEnumerable<Uri> newUrls = Enumerable.Empty<Uri>();
+                foreach (var u in urls)
+                {
+                    if (u[0] == '/' || u[0] == '?' || u[0] == '\\')
+                    {
+                        newUrls = newUrls.Append(new Uri(url, u));
+                    }
+                    else if (u[0] == 'h')
+                    {
+                        newUrls = newUrls.Append(new Uri(u));
+                    }
+                    else
+                    {
+                        try
+                        {
+                            newUrls = newUrls.Append(new Uri(url, u));
+                        }
+                        catch(Exception ex)
+                        {
+                            Console.WriteLine(u);
+                            Console.WriteLine(ex.Message);
+                        }
+                    }
+                }
+
+                return newUrls;
             }
             catch (Exception ex)
             {
@@ -96,7 +117,15 @@ namespace TestTask
                 }
                 else if (!returnListUri.Contains(queueUri.FirstOrDefault()))
                 {
-                    queueUri.AddRange(GetUrlsFromHtml(queueUri.FirstOrDefault().ToString()).ToList());
+                    try
+                    {
+                        queueUri.AddRange(GetUrlsFromHtml(queueUri.FirstOrDefault().ToString()).ToList());
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(queueUri.FirstOrDefault().ToString());
+                        Console.WriteLine(ex.Message);
+                    }
                     queueUri = queueUri.Distinct().ToList();
                     returnListUri = returnListUri.Append(queueUri.FirstOrDefault());
                     queueUri.Remove(queueUri.FirstOrDefault());
@@ -110,5 +139,4 @@ namespace TestTask
             return returnListUri.Distinct().ToList();
         }
     }
-
 }
