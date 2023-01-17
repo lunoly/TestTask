@@ -24,8 +24,9 @@ namespace TestTask
             var returnListUri = Enumerable.Empty<Uri>();
             if (!url.Contains("sitemap.xml"))
             {
-                if ((url.Last() != '\\') || (url.Last() != '/')) { url = string.Concat(url, '/'); }
+                if ((url.Last() != '\\') && (url.Last() != '/')) { url = string.Concat(url, '/'); }
                 url = string.Concat(url, "sitemap.xml");
+                Console.WriteLine(url);
             }
 
             try
@@ -50,7 +51,7 @@ namespace TestTask
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine("3. " + ex.Message);
                 return Enumerable.Empty<Uri>();
             }
         }

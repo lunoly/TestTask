@@ -12,6 +12,12 @@ namespace TestTask
     /// </summary>
     public static class SiteScan
     {
+        static string xpath = new StringBuilder("//a[@href")
+                .Append(" and not(@href='')")
+                .Append(" and not(contains(@href,'#'))")
+                .Append(" and not(contains(@href,'}'))")
+                .Append(" and not(contains(@href,'java'))")
+                .Append("]").ToString();
 
         /// <summary>
         /// Gets the urls from website.
@@ -39,21 +45,22 @@ namespace TestTask
         /// <returns>Urls list.</returns>
         public static IEnumerable<Uri> GetUrlsFromHtml(Uri url)
         {
+            if (url.IsFile) { return Enumerable.Empty<Uri>(); }
+            
             var client = new HttpClient();
             var tresponse = client.GetAsync(url);
-            tresponse.Wait();
+            tresponse.Wait(10000);
+            if (!tresponse.Result.Content.Headers.ContentType.ToString().Contains("html")) { return Enumerable.Empty<Uri>(); }  
             var tcontent = tresponse.Result.Content.ReadAsStringAsync();
             tcontent.Wait();
 
+            if (!tcontent.Result.ToUpper().StartsWith("<!DOCTYPE"))
+            {
+                return Enumerable.Empty<Uri>();
+            }
+
             HtmlDocument doc = new HtmlDocument();
             doc.LoadHtml(tcontent.Result);
-
-            var xpath = new StringBuilder("//a[@href")
-                .Append(" and not(@href='')")
-                .Append(" and not(contains(@href,'#'))")
-                .Append(" and not(contains(@href,'}'))")
-                .Append(" and not(contains(@href,'java'))")
-                .Append("]").ToString();
 
             try
             {
@@ -64,13 +71,13 @@ namespace TestTask
                 IEnumerable<Uri> newUrls = Enumerable.Empty<Uri>();
                 foreach (var u in urls)
                 {
-                    if (u[0] == '/' || u[0] == '?' || u[0] == '\\')
+                    if (u[0] == 'h')
+                    {
+                        continue;
+                    }
+                    else if (u[0] == '/' || u[0] == '?' || u[0] == '\\')
                     {
                         newUrls = newUrls.Append(new Uri(url, u));
-                    }
-                    else if (u[0] == 'h')
-                    {
-                        newUrls = newUrls.Append(new Uri(u));
                     }
                     else
                     {
@@ -90,7 +97,8 @@ namespace TestTask
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine(url);
+                Console.WriteLine("1."+ex.Message);
                 return Enumerable.Empty<Uri>();
             }
         }
@@ -124,7 +132,7 @@ namespace TestTask
                     catch (Exception ex)
                     {
                         Console.WriteLine(queueUri.FirstOrDefault().ToString());
-                        Console.WriteLine(ex.Message);
+                        Console.WriteLine("2. "+ex.Message);
                     }
                     queueUri = queueUri.Distinct().ToList();
                     returnListUri = returnListUri.Append(queueUri.FirstOrDefault());

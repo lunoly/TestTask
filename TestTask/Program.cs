@@ -27,7 +27,9 @@ namespace TestTask
                 uri = SiteScan.GetUrlsFromHtml(userUrl);
             } while (uri.Count() == 0);
 
+            Console.WriteLine("general Starts");
             generalListUri = SiteScan.CheckAllPages(uri.ToList(), userUrl);
+            Console.WriteLine("sitemap Starts");
             siteMapUri = SiteMap.ReadSiteMap(userUrl);
             unitedListUri = generalListUri.Concat(siteMapUri).Distinct();
             inSiteMapNotInGeneralListUri = siteMapUri.Except(generalListUri);
